@@ -5,6 +5,7 @@
 
 namespace Graviton\GeneratorBundle\Tests\Definition;
 
+use Graviton\GeneratorBundle\Definition\DefinitionElementInterface;
 use Graviton\GeneratorBundle\Definition\JsonDefinition;
 use Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed;
 use Graviton\GeneratorBundle\Definition\JsonDefinitionField;
@@ -29,6 +30,7 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
     private $relationsPath;
     private $rolesPath;
     private $nestedFieldPath;
+    private $nestedRelationsPath;
 
     /**
      * setup
@@ -46,6 +48,7 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
         $this->relationsPath = __DIR__.'/resources/test-minimal-relations.json';
         $this->rolesPath = __DIR__.'/resources/test-roles.json';
         $this->nestedFieldPath = __DIR__.'/resources/test-nested-fields.json';
+        $this->nestedRelationsPath = __DIR__.'/resources/test-nested-relations.json';
     }
 
     /**
@@ -407,7 +410,7 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
         $definition = $this->loadJsonDefinition($this->nestedFieldPath);
 
         /** @var JsonDefinitionHash $field */
-        $field = $definition->getField('hash');
+        $field = $this->getFieldByPath($definition, 'hash');
         $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionHash', $field);
 
         $this->assertEquals(
@@ -432,13 +435,9 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
             $field->getJsonDefinition()
         );
 
-        /** @var JsonDefinitionArray $field */
-        $field = $definition->getField('arrayhash');
-        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionArray', $field);
-
-        /** @var JsonDefinitionHash $element */
-        $element = $field->getElement();
-        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionHash', $element);
+        /** @var JsonDefinitionHash $field */
+        $field = $this->getFieldByPath($definition, 'arrayhash.0');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionHash', $field);
 
         $this->assertEquals(
             (new JsonDefinition(
@@ -459,16 +458,12 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
                             )
                     )
             )),
-            $element->getJsonDefinition()
+            $field->getJsonDefinition()
         );
 
-        /** @var JsonDefinitionArray $field */
-        $field = $definition->getField('deep');
-        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionArray', $field);
-
-        /** @var JsonDefinitionHash $element */
-        $element = $field->getElement();
-        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionHash', $element);
+        /** @var JsonDefinitionHash $field */
+        $field = $this->getFieldByPath($definition, 'deep.0');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionHash', $field);
 
         $this->assertEquals(
             new JsonDefinition(
@@ -494,7 +489,138 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
                             )
                     )
             ),
-            $element->getJsonDefinition()
+            $field->getJsonDefinition()
         );
+    }
+
+    /**
+     * @return void
+     * @group tmp
+     */
+    public function testNestedRelations()
+    {
+        $definition = $this->loadJsonDefinition($this->nestedRelationsPath);
+
+        /** @var JsonDefinitionHash $field */
+        $field = $this->getFieldByPath($definition, 'hash');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionHash', $field);
+
+        $this->assertEquals(
+            (new JsonDefinition(
+                (new Schema\Definition())
+                    ->setId('RelationTestHash')
+                    ->setIsSubDocument(true)
+                    ->setTarget(
+                        (new Schema\Target())
+                            ->addField(
+                                (new Schema\Field())
+                                    ->setName('embedOne')
+                                    ->setType('class:Entity')
+                            )
+                            ->addField(
+                                (new Schema\Field())
+                                    ->setName('referenceOne')
+                                    ->setType('class:Entity')
+                            )
+                            ->addField(
+                                (new Schema\Field())
+                                    ->setName('embedMany')
+                                    ->setType('class:Entity[]')
+                            )
+                            ->addField(
+                                (new Schema\Field())
+                                    ->setName('referenceMany')
+                                    ->setType('class:Entity[]')
+                            )
+                            ->addRelation(
+                                (new Schema\Relation())
+                                    ->setType(JsonDefinitionEmbed::REL_TYPE_EMBED)
+                                    ->setLocalProperty('embedOne')
+                            )
+                            ->addRelation(
+                                (new Schema\Relation())
+                                    ->setType(JsonDefinitionEmbed::REL_TYPE_EMBED)
+                                    ->setLocalProperty('embedMany')
+                            )
+                    )
+            )),
+            $field->getJsonDefinition()
+        );
+
+        /** @var JsonDefinitionEmbed $embedField */
+        $embedField = $this->getFieldByPath($definition, 'hash.embedOne');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $embedField);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_EMBED, $embedField->getRelType());
+        $this->assertEquals('Entity', $embedField->getClassName());
+
+        /** @var JsonDefinitionArray $embedArray */
+        $embedField = $this->getFieldByPath($definition, 'hash.embedMany.0');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $embedField);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_EMBED, $embedField->getRelType());
+        $this->assertEquals('Entity', $embedField->getClassName());
+
+        /** @var JsonDefinitionEmbed $referenceField */
+        $referenceField = $this->getFieldByPath($definition, 'hash.referenceOne');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $referenceField);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_REF, $referenceField->getRelType());
+        $this->assertEquals('Entity', $referenceField->getClassName());
+
+        /** @var JsonDefinitionEmbed $referenceField */
+        $referenceField = $this->getFieldByPath($definition, 'hash.referenceMany.0');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $referenceField);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_REF, $referenceField->getRelType());
+        $this->assertEquals('Entity', $referenceField->getClassName());
+
+
+
+        /** @var JsonDefinitionEmbed $embedField */
+        $embedField = $this->getFieldByPath($definition, 'deep.0.sub.embedOne');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $embedField);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_EMBED, $embedField->getRelType());
+        $this->assertEquals('Entity', $embedField->getClassName());
+
+        /** @var JsonDefinitionArray $embedArray */
+        $embedField = $this->getFieldByPath($definition, 'deep.0.sub.subsub.0.embedMany.0');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $embedField);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_EMBED, $embedField->getRelType());
+        $this->assertEquals('Entity', $embedField->getClassName());
+
+        /** @var JsonDefinitionEmbed $referenceField */
+        $referenceField = $this->getFieldByPath($definition, 'deep.0.sub.referenceOne');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $referenceField);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_REF, $referenceField->getRelType());
+        $this->assertEquals('Entity', $referenceField->getClassName());
+
+        /** @var JsonDefinitionEmbed $referenceField */
+        $referenceField = $this->getFieldByPath($definition, 'deep.0.sub.subsub.0.referenceMany.0');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $referenceField);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_REF, $referenceField->getRelType());
+        $this->assertEquals('Entity', $referenceField->getClassName());
+    }
+
+    /**
+     * @param JsonDefinition $definition
+     * @param string         $path
+     * @return DefinitionElementInterface
+     */
+    private function getFieldByPath(JsonDefinition $definition, $path)
+    {
+        $result = $definition;
+        foreach (explode('.', $path) as $item) {
+            if ($result instanceof JsonDefinition) {
+                $this->assertNotEquals('0', $item);
+                $result = $result->getField($item);
+            } elseif ($result instanceof JsonDefinitionHash) {
+                $this->assertNotEquals('0', $item);
+                $result = $result->getJsonDefinition()->getField($item);
+            } elseif ($result instanceof JsonDefinitionArray) {
+                $this->assertEquals('0', $item);
+                $result = $result->getElement();
+            } else {
+                $this->fail(sprintf('Cannot get subfield "%s" from "%s"', $item, get_class($result)));
+            }
+        }
+
+        return $result;
     }
 }
