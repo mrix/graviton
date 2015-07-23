@@ -97,7 +97,6 @@ class DefinitionElementTest extends \PHPUnit_Framework_TestCase
             'length' => 200,
             'title' => 'A testing title',
             'description' => 'A lengthy and detailed description.',
-            'exposeAs' => null,
             'readOnly' => false,
             'required' => true,
             'translatable' => true,
@@ -222,14 +221,16 @@ class DefinitionElementTest extends \PHPUnit_Framework_TestCase
         $field = $jsonDef->getField('contactCode');
         $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionHash', $field);
 
-        $def = array(
-            'exposedName' => 'contactCode',
+        $def = [
             'type' => 'hash',
+            'name' => 'contactCode',
+            'exposedName' => 'contactCode',
             'relType' => $field::REL_TYPE_EMBED,
             'doctrineType' => '\Document\ShowcaseContactCode',
             'serializerType' => '\Document\ShowcaseContactCode',
-            'isClassType' => true
-        );
+            'isClassType' => true,
+            'constraints' => [],
+        ];
 
         $this->assertEquals($def, $field->getDefAsArray());
     }
