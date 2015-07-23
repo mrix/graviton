@@ -300,7 +300,11 @@ class JsonDefinition
     private function processFieldHierarchyRecursive($name, $definition)
     {
         if ($definition instanceof Schema\Field) {
-            return $this->processSimpleField($name, $definition);
+            if (strpos($definition->getType(), 'class:') === 0) {
+                return $this->processEmbedField($name, $definition);
+            }
+
+            return new JsonDefinitionField($name, $definition);
         } elseif (array_keys($definition) === ['$']) {
             return new JsonDefinitionArray($name, $this->processFieldHierarchyRecursive($name, $definition['$']));
         } else {
@@ -319,14 +323,17 @@ class JsonDefinition
      *
      * @return JsonDefinitionField
      */
-    private function processSimpleField($name, Schema\Field $definition)
+    private function processEmbedField($name, Schema\Field $definition)
     {
-        $field = new JsonDefinitionField($name, $definition);
+        $field = new JsonDefinitionEmbed($name, $definition);
 
         $relations = $this->getRelations();
-        if (isset($relations[$definition->getName()]) &&
-            $relations[$definition->getName()]->getType() === DefinitionElementInterface::REL_TYPE_EMBED) {
-            $field->setRelType(DefinitionElementInterface::REL_TYPE_EMBED);
+        if (isset($relations[$definition->getName()])) {
+            $field->setRelType($relations[$definition->getName()]->getType());
+        }
+
+        if (substr($definition->getType(), -2) === '[]') {
+            return new JsonDefinitionArray($name, $field);
         }
 
         return $field;

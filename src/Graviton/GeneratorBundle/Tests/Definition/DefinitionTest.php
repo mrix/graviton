@@ -6,6 +6,7 @@
 namespace Graviton\GeneratorBundle\Tests\Definition;
 
 use Graviton\GeneratorBundle\Definition\JsonDefinition;
+use Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed;
 use Graviton\GeneratorBundle\Definition\JsonDefinitionField;
 use Graviton\GeneratorBundle\Definition\JsonDefinitionArray;
 use Graviton\GeneratorBundle\Definition\JsonDefinitionHash;
@@ -202,23 +203,43 @@ class DefinitionTest extends \PHPUnit_Framework_TestCase
         $jsonDef = $this->loadJsonDefinition($this->relationsPath);
         $relations = $jsonDef->getRelations();
 
-        $this->assertEquals(2, count($relations));
+        $this->assertEquals(4, count($relations));
+        $this->assertContainsOnlyInstancesOf('Graviton\GeneratorBundle\Definition\Schema\Relation', $relations);
 
-        $this->assertInstanceOf(
-            'Graviton\\GeneratorBundle\\Definition\\Schema\\Relation',
-            $relations['anotherInt']
-        );
-        $this->assertEquals('embed', $relations['anotherInt']->getType());
-        $field = $jsonDef->getField('anotherInt');
-        $this->assertEquals($field::REL_TYPE_EMBED, $field->getRelType());
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_EMBED, $relations['embedOne']->getType());
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_EMBED, $relations['embedMany']->getType());
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_REF, $relations['referenceOne']->getType());
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_REF, $relations['referenceMany']->getType());
 
-        $this->assertInstanceOf(
-            'Graviton\\GeneratorBundle\\Definition\\Schema\\Relation',
-            $relations['someFloatyDouble']
-        );
-        $this->assertEquals('ref', $relations['someFloatyDouble']->getType());
-        $field = $jsonDef->getField('someFloatyDouble');
-        $this->assertEquals($field::REL_TYPE_REF, $field->getRelType());
+
+        /** @var JsonDefinitionEmbed $field */
+        $field = $jsonDef->getField('embedOne');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $field);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_EMBED, $field->getRelType());
+
+        /** @var JsonDefinitionArray $arrayField */
+        $arrayField = $jsonDef->getField('embedMany');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionArray', $arrayField);
+
+        /** @var JsonDefinitionEmbed $arrayItem */
+        $arrayItem = $arrayField->getElement();
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $arrayItem);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_EMBED, $arrayItem->getRelType());
+
+
+        /** @var JsonDefinitionEmbed $field */
+        $field = $jsonDef->getField('referenceOne');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $field);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_REF, $field->getRelType());
+
+        /** @var JsonDefinitionArray $arrayField */
+        $arrayField = $jsonDef->getField('referenceMany');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionArray', $arrayField);
+
+        /** @var JsonDefinitionEmbed $arrayItem */
+        $arrayItem = $arrayField->getElement();
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $arrayItem);
+        $this->assertEquals(JsonDefinitionEmbed::REL_TYPE_REF, $arrayItem->getRelType());
     }
 
     /**

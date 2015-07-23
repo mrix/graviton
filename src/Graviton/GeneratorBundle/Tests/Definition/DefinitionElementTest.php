@@ -6,6 +6,7 @@
 namespace Graviton\GeneratorBundle\Tests\Definition;
 
 use Graviton\GeneratorBundle\Definition\JsonDefinition;
+use Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed;
 use Graviton\GeneratorBundle\Definition\JsonDefinitionField;
 use Graviton\GeneratorBundle\Definition\JsonDefinitionHash;
 use Graviton\GeneratorBundle\Definition\JsonDefinitionArray;
@@ -78,8 +79,6 @@ class DefinitionElementTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(200, $field->getLength());
         $this->assertEquals('string', $field->getTypeDoctrine());
         $this->assertEquals('string', $field->getTypeSerializer());
-        $this->assertNull($field->getClassName());
-        $this->assertFalse($field->isClassType());
     }
 
     /**
@@ -105,7 +104,6 @@ class DefinitionElementTest extends \PHPUnit_Framework_TestCase
             'exposedName' => 'testField',
             'doctrineType' => 'string',
             'serializerType' => 'string',
-            'relType' => $field::REL_TYPE_REF,
             'isClassType' => false,
             'constraints' => array(),
             'collection' => array()
@@ -115,28 +113,30 @@ class DefinitionElementTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * class type
+     * Embedded fields
      *
      * @return void
      */
-    public function testClassType()
+    public function testEmbedFields()
     {
         $jsonDef = $this->loadJsonDefinition($this->fullDefPath);
 
-        /** @var JsonDefinitionField $field */
-        $field = $jsonDef->getField('contact');
+        /** @var JsonDefinitionEmbed $embedField */
+        $embedField = $jsonDef->getField('contact');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $embedField);
+        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact', $embedField->getClassName());
+        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact', $embedField->getClassName());
+        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact', $embedField->getType());
+        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact', $embedField->getTypeSerializer());
+        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact', $embedField->getTypeDoctrine());
 
-        $this->assertTrue($field->isClassType());
-        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact', $field->getClassName());
-        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact', $field->getType());
-        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact', $field->getTypeSerializer());
-        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact', $field->getTypeDoctrine());
-
-        $field = $jsonDef->getField('contacts');
-        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact[]', $field->getClassName());
-        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact[]', $field->getType());
-        $this->assertEquals('array<Graviton\PersonBundle\Document\PersonContact>', $field->getTypeSerializer());
-        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact[]', $field->getTypeDoctrine());
+        /** @var JsonDefinitionArray $arrayField */
+        $arrayField = $jsonDef->getField('contacts');
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionArray', $arrayField);
+        $this->assertInstanceOf('Graviton\GeneratorBundle\Definition\JsonDefinitionEmbed', $arrayField->getElement());
+        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact[]', $arrayField->getType());
+        $this->assertEquals('array<Graviton\PersonBundle\Document\PersonContact>', $arrayField->getTypeSerializer());
+        $this->assertEquals('Graviton\PersonBundle\Document\PersonContact[]', $arrayField->getTypeDoctrine());
     }
 
     /**
