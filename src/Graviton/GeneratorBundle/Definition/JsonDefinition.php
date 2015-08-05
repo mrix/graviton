@@ -301,7 +301,7 @@ class JsonDefinition
     {
         if ($definition instanceof Schema\Field) {
             if (strpos($definition->getType(), 'class:') === 0) {
-                return $this->processEmbedField($name, $definition);
+                return $this->processNestedField($name, $definition);
             }
 
             return new JsonDefinitionField($name, $definition);
@@ -323,17 +323,18 @@ class JsonDefinition
      *
      * @return JsonDefinitionField
      */
-    private function processEmbedField($name, Schema\Field $definition)
+    private function processNestedField($name, Schema\Field $definition)
     {
-        $field = new JsonDefinitionEmbed($name, $definition);
-
         $relations = $this->getRelations();
-        if (isset($relations[$definition->getName()])) {
-            $field->setRelType($relations[$definition->getName()]->getType());
+        if (isset($relations[$definition->getName()]) &&
+            $relations[$definition->getName()]->getType() === DefinitionElementInterface::REL_TYPE_EMBED) {
+            $field = new JsonDefinitionEmbed($name, $this, []);
+        } else {
+            $field = new JsonDefinitionReference($name, $definition);
         }
 
         if (substr($definition->getType(), -2) === '[]') {
-            return new JsonDefinitionArray($name, $field);
+            $field = new JsonDefinitionArray($name, $field);
         }
 
         return $field;
