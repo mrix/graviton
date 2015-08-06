@@ -21,7 +21,7 @@ class JsonDefinitionReference extends JsonDefinitionField
         return array_replace(
             parent::getDefAsArray(),
             [
-                'type'              => $this->getClassName(),
+                'type'              => $this->getType(),
                 'doctrineType'      => $this->getTypeDoctrine(),
                 'serializerType'    => $this->getTypeSerializer(),
                 'relType'           => self::REL_TYPE_REF,
@@ -61,11 +61,11 @@ class JsonDefinitionReference extends JsonDefinitionField
     }
 
     /**
-     * If this is a classType, return the defined class name
+     * Returns the defined class name
      *
      * @return string class name
      */
-    public function getClassName()
+    private function getClassName()
     {
         return strtr($this->getDef()->getType(), ['class:' => '', '[]' => '']);
     }

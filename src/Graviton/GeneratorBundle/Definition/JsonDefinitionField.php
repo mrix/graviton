@@ -117,7 +117,7 @@ class JsonDefinitionField implements DefinitionElementInterface
                         )
                     ];
                 },
-                $this->getConstraints()
+                $this->definition->getConstraints()
             )
         ];
     }
@@ -143,7 +143,7 @@ class JsonDefinitionField implements DefinitionElementInterface
      *
      * @return string exposed field name
      */
-    public function getExposedName()
+    private function getExposedName()
     {
         return $this->definition->getExposeAs() === null ?
             $this->definition->getName() :
@@ -173,37 +173,5 @@ class JsonDefinitionField implements DefinitionElementInterface
 
         // our fallback default
         return $this->serializerTypeMap[self::TYPE_STRING];
-    }
-
-    /**
-     * Returns the field length
-     *
-     * @return int length
-     */
-    public function getLength()
-    {
-        return $this->definition->getLength();
-    }
-
-    /**
-     * Returns defined Constraints for this field
-     *
-     * @return Schema\Constraint[] Constraints
-     */
-    public function getConstraints()
-    {
-        return $this->definition->getConstraints();
-    }
-
-    /**
-     * Returns the field description
-     *
-     * @return string description
-     */
-    public function getDescription()
-    {
-        return $this->definition->getDescription() === null ?
-            '' :
-            $this->definition->getDescription();
     }
 }
