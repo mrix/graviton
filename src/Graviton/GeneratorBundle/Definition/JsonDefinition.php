@@ -328,7 +328,7 @@ class JsonDefinition
         $relations = $this->getRelations();
         if (isset($relations[$definition->getName()]) &&
             $relations[$definition->getName()]->getType() === DefinitionElementInterface::REL_TYPE_EMBED) {
-            $field = new JsonDefinitionEmbed($name, $this, []);
+            $field = new JsonDefinitionEmbed($name, $this, $definition);
         } else {
             $field = new JsonDefinitionReference($name, $definition);
         }
@@ -371,5 +371,15 @@ class JsonDefinition
         }
 
         return $this->def->getService()->getRoles();
+    }
+
+    /**
+     * Get document parent class
+     *
+     * @return string
+     */
+    public function getDocumentParentClass()
+    {
+        return $this->def->getParentClass();
     }
 }

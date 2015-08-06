@@ -26,6 +26,10 @@ class Definition
      */
     private $isSubDocument = false;
     /**
+     * @var string
+     */
+    private $parentClass;
+    /**
      * @var Service
      */
     private $service;
@@ -85,6 +89,24 @@ class Definition
     public function setIsSubDocument($isSubDocument)
     {
         $this->isSubDocument = $isSubDocument;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getParentClass()
+    {
+        return $this->parentClass;
+    }
+
+    /**
+     * @param string $parentClass Parent class name
+     * @return $this
+     */
+    public function setParentClass($parentClass)
+    {
+        $this->parentClass = $parentClass;
         return $this;
     }
 

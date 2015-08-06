@@ -16,7 +16,7 @@ use JMS\Serializer\DeserializationContext;
  * @license  http://opensource.org/licenses/gpl-license.php GNU Public License
  * @link     http://swisscom.ch
  */
-class {{ document }} implements TranslatableDocumentInterface
+class {{ document }} {% if parentClass is not empty %}extends {{ parentClass }}{% endif %} implements TranslatableDocumentInterface
 {
     /**
      * @var MongoId $id

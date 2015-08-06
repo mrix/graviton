@@ -11,6 +11,24 @@ namespace Graviton\GeneratorBundle\Definition;
 class JsonDefinitionEmbed extends JsonDefinitionHash
 {
     /**
+     * @var Schema\Field
+     */
+    private $defintion;
+
+    /**
+     * Constructor
+     *
+     * @param string         $name       Name of this hash
+     * @param JsonDefinition $parent     Parent definiton
+     * @param Schema\Field   $definition Field definition
+     */
+    public function __construct($name, JsonDefinition $parent, Schema\Field $definition)
+    {
+        $this->defintion = $definition;
+        parent::__construct($name, $parent, []);
+    }
+
+    /**
      * Returns the whole definition in array form
      *
      * @return array Definition
@@ -20,7 +38,7 @@ class JsonDefinitionEmbed extends JsonDefinitionHash
         return array_replace(
             parent::getDefAsArray(),
             [
-                'type'              => $this->getClassName(),
+                'type'              => $this->getType(),
                 'doctrineType'      => $this->getTypeDoctrine(),
                 'serializerType'    => $this->getTypeSerializer(),
                 'relType'           => self::REL_TYPE_EMBED,
@@ -42,8 +60,27 @@ class JsonDefinitionEmbed extends JsonDefinitionHash
         $definition = (new Schema\Definition())
             ->setId($this->getClassName())
             ->setIsSubDocument(true)
-            ->setTarget(new Schema\Target());
+            ->setParentClass($this->getParentClass())
+            ->setTarget(
+                (new Schema\Target())
+                    ->addField(
+                        (new Schema\Field())
+                            ->setName('__ununsed__')
+                            ->setType('string')
+                            ->setReadOnly(true)
+                    )
+            );
 
         return new JsonDefinition($definition);
+    }
+
+    /**
+     * Returns the parent class name
+     *
+     * @return string class name
+     */
+    private function getParentClass()
+    {
+        return strtr($this->defintion->getType(), ['class:' => '', '[]' => '']);
     }
 }

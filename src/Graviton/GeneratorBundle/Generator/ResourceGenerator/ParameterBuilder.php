@@ -33,6 +33,7 @@ class ParameterBuilder
             $this->parameters['extension_alias'] = Container::underscore($value);
         } elseif ($name === 'json') {
             $this->parameters['json'] = $value;
+            $this->parameters['parentClass'] = $value->getDocumentParentClass();
             // if we have data for id field, pass it along
             $idField = $value->getField('id');
             if (!is_null($idField)) {

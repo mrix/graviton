@@ -10,6 +10,9 @@
         <property name="isSubDocument"
                   type="boolean"
                   serialized-name="isSubDocument"/>
+        <property name="parentClass"
+                  type="string"
+                  serialized-name="parentClass"/>
         <property name="service"
                   type="Graviton\GeneratorBundle\Definition\Schema\Service"
                   serialized-name="service"/>
